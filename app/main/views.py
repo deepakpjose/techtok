@@ -1,7 +1,6 @@
-from flask import render_template, session, redirect, \
-                  url_for, current_app, request, flash, abort, jsonify, make_response
+from flask import render_template, url_for
 from . import main
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
-    return 'hello techzines.com'
+    return render_template('index.html') 
