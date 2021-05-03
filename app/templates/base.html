@@ -8,18 +8,7 @@
     <title>Bootstrap-Flask Demo Application</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}">
     {{ bootstrap.load_css() }}
-    <style>
-        pre {
-            background: #ddd;
-            padding: 10px;
-        }
-        h2 {
-            margin-top: 20px;
-        }
-        footer {
-            margin: 20px;
-        }
-    </style>
+    {% block signin_css %}{% endblock %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
@@ -42,7 +31,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="text-center">
+    <footer class="text-center footer">
         {% block footer %}
             <small> &copy; 2021–<script>document.write(new Date().getFullYear())</script> <a href="http://greyli.com" title="Written by
                 techtok.com">www.techtok.com</a>
