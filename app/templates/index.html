@@ -3,7 +3,7 @@
 {% block content %}
       <section class="jumbotron text-center">
         <div class="container">
-          <h1 class="jumbotron-heading">www.techtok.com</h1>
+          <h1 class="jumbotron-heading">www.insidecode.me</h1>
           <p class="lead text-muted">Something short and leading about the collection below—its contents, the creator, etc. Make it short and sweet, but not too short so folks don't simply skip over it entirely.</p>
         </div>
       </section>
@@ -13,10 +13,10 @@
         <div class="container">
 
           <div class="row">
-            {% for post in range(9) %}  
+            {% for post in posts %}  
                 <div class="col-md-4">
                   <div class="card mb-4 box-shadow">
-                    <a href="{{ url_for('main.post', id=post) }}">
+                    <a href="{{ url_for('main.post', id=post.id, header=post.header) }}">
                     <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&bg=55595c&fg=eceeef&text=Thumbnail" alt="Card image cap">
                     <div class="card-body">
                       <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
@@ -31,5 +31,13 @@
             {% endfor %}
           </div>
         </div>
+      </div>
+
+
+      <div class="text-center" style="width: 18rem;">
+          <nav class="blog-pagination">
+            <a class="btn btn-outline-primary" href="#">Older</a>
+            <a class="btn btn-outline-primary" href="#">Newer</a>
+          </nav>
       </div>
 {% endblock %}

@@ -5,37 +5,35 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Bootstrap-Flask Demo Application</title>
+    <title>Inside Code</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}">
     {{ bootstrap.load_css() }}
     {% block signin_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                {{ render_nav_item('main.index', 'Home', use_li=True) }}
-                <li class="nav-item"><a class="nav-link" href="https://bootstrap-flask.readthedocs.io/" target="_blank">Documentation</a></li>
-                <li class="nav-item"><a class="nav-link" href="https://getbootstrap.com/docs/4.5/getting-started/introduction/" target="_blank">Bootstrap Documentation</a></li>
-                <li class="nav-item"><a class="nav-link" href="https://github.com/greyli/bootstrap-flask" target="_blank">GitHub</a></li>
-            </ul>
-        </div>
-    </nav>
-    
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light mb-4" style="background-color: #eeac08;">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    {{ render_nav_item('main.index', 'Home', use_li=True) }}
+                </ul>
+            </div>
+        </nav>
+    </div> 
     <main class="container">
         {{ render_messages(container=False, dismissible=True) }}
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="text-center footer">
+    <footer class="fixed-bottom text-center footer">
         {% block footer %}
-            <small> &copy; 2021–<script>document.write(new Date().getFullYear())</script> <a href="http://greyli.com" title="Written by
-                techtok.com">www.techtok.com</a>
-            </small>
+            <p> &copy; 2021–<script>document.write(new Date().getFullYear())</script> <a href="http://insidecode.me" title="Written by
+                Deepak P Jose">www.insidecode.me</a>
+            </p>
         {% endblock %}
     </footer>
 

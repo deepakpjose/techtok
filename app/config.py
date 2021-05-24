@@ -13,7 +13,7 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-    UPLOADED_GIFS_DEST = os.getcwd() + '/docs'
-    POSTS_PER_PAGE = 9
+    UPLOAD_FOLDER = os.getenv('APP_PATH') + '/docs'
+    ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'docx', 'doc'}
 
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')

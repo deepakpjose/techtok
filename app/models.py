@@ -9,12 +9,13 @@ from flask import current_app, url_for, Markup
 from flask_login import UserMixin, AnonymousUserMixin
 from app import db
 from . import login_manager
-#for pictures and gifs
+
+_MONTHNAMES = [None, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 class PostType:
     BLOG = 0x1
     ZINES = 0X2
-    PICS  = 0X4
+    POSTER  = 0X4
 
 #pg112
 class Permission:
@@ -202,17 +203,23 @@ class Post(db.Model):
     header = db.Column(db.String(32))
     description = db.Column(db.Text)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    tags = db.Column(db.String(64))
+
     # using flask-uploads
     # This is used for main page
-    tactic_pic = db.Column(db.String(64))
-    tactic_url = db.Column(db.String(64))
+    doc = db.Column(db.String(64))
+    url = db.Column(db.String(64))
 
-    is_blog = db.Column(db.Boolean)
+    post_type = db.Column(db.Integer)
+
+    def month_of_date(self, month):
+        return (_MONTHNAMES[month])
 
     def post_date_in_isoformat(self):
-        date_str = self.timestamp.isoformat()[:10]
-        date_list = date_str.split('-')[::-1]
-        return '{:s}-{:s}-{:s}'.format(date_list[0], date_list[1], date_list[2]) 
+        date_str = self.timestamp
+        month = self.month_of_date(date_str.month)
+
+        return '{:d} {:s}, {:d}'.format(date_str.day, month, date_str.year)
 
 @login_manager.user_loader
 def load_user(user_id):
