@@ -23,9 +23,10 @@ def post(id, header):
 
     return render_template('post.html', post=page)
 
-@main.route('/download_file/<filename>', methods=['GET'])
-def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+@main.route('/download_file/<int:id>/<filename>', methods=['GET'])
+def download_file(id, filename):
+    directory = '{:s}/{:s}'.format(app.config['UPLOAD_FOLDER'], str(id))
+    return send_from_directory(directory, filename)
 
 @main.route("/sitemap")
 @main.route("/sitemap/")

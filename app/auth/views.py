@@ -38,6 +38,16 @@ def logout():
     logout_user()
     return redirect(url_for('main.index'))
 
+def poster_directory_update(post, f):
+    directory = '{:s}/{:s}'.format(app.config['UPLOAD_FOLDER'], str(post.id))
+    uploaded_file_path = os.path.join(directory, f.filename)
+    f.save(uploaded_file_path)
+
+    uploaded_file_url = url_for('main.download_file', id=post.id, filename=f.filename)
+    post.doc = uploaded_file_path
+    post.url = uploaded_file_url
+    return
+
 @auth.route('/writeposters', methods=['GET', 'POST'])
 @login_required
 @permission_required(Permission.WRITE_ARTICLES)
@@ -53,22 +63,70 @@ def writeposters():
         filename = secure_filename(f.filename)
 
         if filename and allowed_file(filename):
-            uploaded_file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            f.save(uploaded_file_path)
-            uploaded_file_url = url_for('main.download_file', filename=filename)
             try:
                 post = Post(body=body, header=header, description=description, tags=tags, \
-                            doc=uploaded_file_path, url=uploaded_file_url, \
                             post_type=PostType.POSTER)
             except:
                 return render_template('error.html', msg="Poster creation failed")
 
             db.session.add(post)
             db.session.commit()
+
+            directory = '{:s}/{:s}'.format(app.config['UPLOAD_FOLDER'], str(post.id))
+            print('directory:{:s} id={:s}', directory, post.id)
+            try:
+                os.mkdir(directory)
+            except:
+                return render_template('error.html', msg="Poster directory creation failed")
+
+            poster_directory_update(post, f)
+
+            db.session.add(post)
+            db.session.commit()
+
             flash('Created post')
             return redirect(request.args.get('next') or url_for('main.index'))
 
         flash('Failed creating post')
+        return redirect(url_for('auth.writeposters'))
+
+    return render_template('writeposter.html', posterform=posterform)
+
+@auth.route('/editposters/<int:id>', methods=['GET', 'POST'])
+@login_required
+@permission_required(Permission.WRITE_ARTICLES)
+def editposters(id):
+    posterform = PosterCreateForm()
+
+    if posterform.validate_on_submit():
+        header = posterform.header.data
+        body = posterform.body.data
+        description = posterform.desc.data
+        tags = posterform.tags.data
+        f = posterform.poster.data
+        filename = secure_filename(f.filename)
+
+        if filename and allowed_file(filename):
+            try:
+                post = Post.query.get_or_404(id)
+                post.body = body
+                post.header = header
+                post.description = description
+                post.tags = tags
+                post.post_type = PostType.POSTER
+            except:
+                msg = "Poster editing failed: {:s}".format(sys.exc_info()[0])
+                return render_template('error.html', msg=msg)
+
+            poster_directory_update(post, f)
+
+            db.session.add(post)
+            db.session.commit()
+            flash('Edited post')
+            return redirect(request.args.get('next') or 
+                            url_for('main.post', id=post.id, header=post.header))
+
+        flash('Failed finding post')
         return redirect(url_for('auth.writeposters'))
 
     return render_template('writeposter.html', posterform=posterform)
