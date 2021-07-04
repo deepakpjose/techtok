@@ -6,3 +6,9 @@
   line-height: 60px; /* Vertically center the text there */
   background-color: #f5f5f5;
 }
+.navbar-nav.navbar-center {
+margin-left: auto;
+margin-right: auto;
+left: 0;
+right: 0;
+}

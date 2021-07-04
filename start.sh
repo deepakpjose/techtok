@@ -1,3 +1,3 @@
-app="docker.techzines"
+app="docker.insidecode"
 docker build -t ${app} .
-docker run -d -p 12777:80 ${app}
+docker run -d -p http://www.insidecode.me -v nginx.conf:/etc/nginx/nginx.conf ${app}

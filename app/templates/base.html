@@ -8,7 +8,7 @@
     <title>Inside Code</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}">
     {{ bootstrap.load_css() }}
-    {% block signin_css %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
 </head>
 <body>
     <div class="container">
@@ -18,8 +18,8 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav mr-auto">
-                    {{ render_nav_item('main.index', 'Home', use_li=True) }}
+                <ul class="navbar-nav navbar-center navbar-brand mr-auto">
+                    {{ render_nav_item('main.index', 'Inside Code', use_li=True) }}
                 </ul>
             </div>
         </nav>

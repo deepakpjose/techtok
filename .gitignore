@@ -1,2 +1,4 @@
 app/data.sqlite
 **/*.sw*
+db_admin_add.txt
+git_token
