@@ -14,8 +14,12 @@
           </div><!-- /.blog-post -->
 
           <div class="text-center" style="width: 18rem;">
-            <a class="twitter-share-button" href="https://twitter.com/intent/tweet">
+	     <a href="https://twitter.com/intent/tweet?text={{ post.header }}%20{{ url_for('.post', id=post.id, header=post.header, _external=True) }}%20by%20@deepakpjose">
                 <button type="button" class="btn btn-primary">Tweet</button>
+            </a>
+
+	    <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ url_for('.post', id=post.id, header=post.header, _external=True) }}">
+                <button type="button" class="btn btn-primary">Share</button>
             </a>
           </div>
           <br>
