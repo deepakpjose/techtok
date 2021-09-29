@@ -1,6 +1,6 @@
 import os
-from manage import app as application 
+from manage import app as application
 
-print('wsgi')
+print("wsgi")
 if __name__ == "__main__":
-    application.run(host='0.0.0.0')
+    application.run(host="0.0.0.0")

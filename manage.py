@@ -1,5 +1,5 @@
 from app import create_app
 
-print('manage')
+print("manage")
 
 app = create_app()
