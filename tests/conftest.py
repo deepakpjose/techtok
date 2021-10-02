@@ -1,4 +1,5 @@
 import pytest
+from app import db
 from manage import app
 from app.models import User, Role
 
@@ -13,12 +14,13 @@ def new_user():
         role=role,
         confirmed=True,
     )
+    db.session.add(user)
+    db.session.commit()
     return user
 
 
 @pytest.fixture(scope="module")
 def test_client():
-    app.testing = True
     with app.test_client() as testing_client:
         with app.app_context():
             yield testing_client
