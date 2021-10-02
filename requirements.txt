@@ -5,3 +5,4 @@ Flask-SQLAlchemy
 Flask-Login
 wtforms[email]
 black
+pytest
