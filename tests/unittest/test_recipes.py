@@ -32,9 +32,8 @@ def test_valid_login(test_client):
     """
     response = test_client.post(
         "/auth/login",
-        data=dict(email="test@flask.com", password="tester"),
+        data=dict(email="test@flask.com", password="hello, world"),
         follow_redirects=True,
     )
-    print(response.data)
     assert response.status_code == 200
     assert b"Successfully logged in." in response.data

@@ -3,7 +3,6 @@ from app import db
 from manage import app
 from app.models import User, Role
 
-
 @pytest.fixture(scope="module")
 def new_user():
     role = Role.query.filter_by(permissions=0x1).first()
@@ -22,5 +21,8 @@ def new_user():
 @pytest.fixture(scope="module")
 def test_client():
     with app.test_client() as testing_client:
+        testing_client.application.config['TESTING'] = True
+        testing_client.application.config['WTF_CSRF_METHODS'] = []
+        testing_client.application.config['WTF_CSRF_ENABLED'] = False
         with app.app_context():
             yield testing_client
