@@ -12,27 +12,31 @@ bootstrap = Bootstrap(app)
 csrf = CSRFProtect(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
-login_manager.session_protection = 'strong'
-login_manager.login_view = 'auth.login'
+login_manager.session_protection = "strong"
+login_manager.login_view = "auth.login"
+
 
 def create_app():
 
     from .main import main as main_blueprint
+
     app.register_blueprint(main_blueprint)
 
     from .auth import auth as auth_blueprint
-    app.register_blueprint(auth_blueprint, url_prefix='/auth')
+
+    app.register_blueprint(auth_blueprint, url_prefix="/auth")
 
     return app
+
 
 def external_url_handler(error, endpoint, values):
     "Looks up an external URL when `url_for` cannot build a URL."
     # This is an example of hooking the build_error_handler.
     # Here, lookup_url is some utility function you've built
     # which looks up the endpoint in some external URL registry.
-    print('endpoint type:', endpoint)
+    print("endpoint type:", endpoint)
     for value in values:
-        print('value:', value)
+        print("value:", value)
 
     url = lookup_url(endpoint, **values)
     if url is None:
@@ -45,5 +49,6 @@ def external_url_handler(error, endpoint, values):
             raise error
     # url_for will use this result, instead of raising BuildError.
     return url
+
 
 app.url_build_error_handlers.append(external_url_handler)
