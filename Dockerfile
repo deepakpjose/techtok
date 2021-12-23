@@ -15,6 +15,7 @@ RUN pip install -r /var/www/requirements.txt
 COPY ./app.ini /etc/uwsgi/uwsgi.ini
 COPY ./app /var/www/app
 COPY ./tests /var/www/tests
+COPY ./gmail /var/www/gmail
 COPY ./app.ini /var/www/app.ini
 COPY ./manage.py /var/www/manage.py
 COPY ./wsgi.py /var/www/wsgi.py
