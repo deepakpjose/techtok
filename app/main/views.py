@@ -3,17 +3,25 @@ from __future__ import print_function
 import os.path
 import random
 import requests
+import threading
+from queue import Queue
 from urllib.parse import urlparse
+from httplib2 import Http
+from timeit import default_timer as timer
+from concurrent import futures
 from flask import render_template, url_for, send_from_directory, request, make_response, session, redirect, jsonify
 from app import app
 from app.models import Post, PostType
 from . import main
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from googleapiclient.http import build_http 
 import google_auth_oauthlib
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 
-gmail_messages = list()
+mail_req_q = Queue()
+mailbox_mails = list()
 
 @main.route("/", methods=["GET", "POST"])
 def index():
@@ -95,7 +103,18 @@ def sitemap():
 CLIENT_SECRETS_FILE = "/var/www/gmail/client_secret.json"
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = {
+          'readonly':'https://www.googleapis.com/auth/gmail.readonly',
+          'labels':'https://www.googleapis.com/auth/gmail.labels',
+          'send':'https://www.googleapis.com/auth/gmail.send',
+          'compose':'https://www.googleapis.com/auth/gmail.compose',
+          'insert':'https://www.googleapis.com/auth/gmail.insert',
+          'modify':'https://www.googleapis.com/auth/gmail.modify',
+          'metadata':'https://www.googleapis.com/auth/gmail.metadata',
+          'basic':'https://www.googleapis.com/auth/gmail.settings.basic',
+          'sharing':'https://www.googleapis.com/auth/gmail.settings.sharing',
+          'full':'https://mail.google.com/'
+         }
 
 @main.route("/print_index_table")
 def print_index_table():
@@ -119,6 +138,9 @@ def print_index_table():
           '<tr><td><a href="/listmessages">get list of all messages</a></td>' +
           '<td>Dump list of all messages</td>' +
           '</td></tr>' +
+          '<tr><td><a href="/listheaders">get list of all message headers</a></td>' +
+          '<td>Dump list of all messages</td>' +
+          '</td></tr>' +
           '<tr><td><a href="/getmessage">get contents of a message</a></td>' +
           '<td>Dump details of a messages</td>' +
           '</td></tr>' +
@@ -137,6 +159,7 @@ def print_index_table():
 @main.route("/test")
 def test_api_request():
     if 'credentials' not in session:
+        session['scope'] = 'readonly'
         return redirect('authorize')
 
     credentials = Credentials(**session['credentials'])
@@ -167,6 +190,7 @@ def test_api_request():
 @main.route('/getimap')
 def getimap():
     if 'credentials' not in session:
+        session['scope'] = 'readonly'
         return redirect('authorize')
 
     credentials = Credentials(**session['credentials'])
@@ -186,6 +210,7 @@ def getimap():
 @main.route('/getpop')
 def getpop():
     if 'credentials' not in session:
+        session['scope'] = 'readonly'
         return redirect('authorize')
 
     credentials = Credentials(**session['credentials'])
@@ -205,6 +230,7 @@ def getpop():
 @main.route('/getprofile')
 def getprofile():
     if 'credentials' not in session:
+        session['scope'] = 'readonly'
         return redirect('authorize')
 
     credentials = Credentials(**session['credentials'])
@@ -230,6 +256,7 @@ def getprofile():
 @main.route('/getmessage')
 def getmessage():
     if 'credentials' not in session:
+        session['scope'] = 'readonly'
         return redirect('authorize')
 
     credentials = Credentials(**session['credentials'])
@@ -269,9 +296,95 @@ def getmessage():
 
     return jsonify(result)
 
+@main.route('/get_a_message/<message_id>')
+def get_a_message(message_id):
+    if 'credentials' not in session:
+        session['scope'] = 'readonly'
+        return redirect('authorize')
+
+    credentials = Credentials(**session['credentials'])
+
+    try:
+        service = build('gmail', 'v1', credentials=credentials)
+    except HttpError as error:
+        app.logger.error('An error occured: {:s}'.format(error))
+        return 'An error occured: {:s}'.format(error)
+
+    try:
+        request=service.users().messages().get(userId='me', id=message_id, format='full')
+        app.logger.info(request.to_json())
+        result=service.users().messages().get(userId='me', id=message_id, format='full').execute()
+
+    except HttpError as error:
+        app.logger.error('An error occured: {:s}'.format(error))
+        return 'An error occured: {:s}'.format(error)
+
+    return jsonify(result)
+
+@main.route('/delete_a_message/<message_id>')
+def delete_a_message(message_id):
+    if 'credentials' not in session:
+        session['scope'] = 'readonly'
+        return redirect(url_for('main.authorize', _external=True))
+
+    if session['scope'] != 'full':
+        session['scope'] = 'full'
+        return redirect(url_for('main.authorize', _external=True))
+
+    credentials = Credentials(**session['credentials'])
+
+    try:
+        service = build('gmail', 'v1', credentials=credentials)
+    except HttpError as error:
+        app.logger.error('An error occured: {:s}'.format(error))
+        return 'An error occured: {:s}'.format(error)
+
+    try:
+        result=service.users().messages().delete(userId='me', id=message_id).execute()
+        app.logger.info(type(result))
+        app.logger.info(result)
+    except HttpError as error:
+        app.logger.error('An error occured: {:s}'.format(error))
+        return 'An error occured: {:s}'.format(error)
+
+    return jsonify(result)
+
+def get_mail_blocks(credentials):
+    t0 = timer()
+    message_list = list()
+    count = 0
+    try:
+        service = build('gmail', 'v1', credentials=credentials)
+        results = service.users().messages().list(userId='me').execute()
+
+        count += 1
+        while results['nextPageToken']:
+            results = service.users().messages().list(userId='me', 
+                                                      pageToken=results['nextPageToken']).execute()
+            message_list.append(results['messages'])
+            count += 1
+            if count == 2:
+                break
+
+    except HttpError as error:
+        app.logger.error('An error occured:', error)
+        return
+    except KeyError as error:
+        app.logger.error('nextPageToken KeyError:')
+        pass 
+
+    elapsed = timer() - t0
+    app.logger.info('count {} elapsed time {:.2f}s'.format(count, elapsed))
+    t0 = timer()
+    results = download_mail(message_list, credentials)
+    elapsed = timer() - t0
+    app.logger.info('full mails count {} elapsed time {:.2f}s'.format(len(results), elapsed))
+    return
+
 @main.route('/listmessages')
 def listmessages():
     if 'credentials' not in session:
+        session['scope'] = 'readonly'
         return redirect('authorize')
 
     credentials = Credentials(**session['credentials'])
@@ -288,6 +401,7 @@ def listmessages():
         while results['nextPageToken'] and i < 10:
             results=service.users().messages().list(userId='me', pageToken=results['nextPageToken']).execute()
             app.logger.info(results['nextPageToken'])
+            app.logger.info(len(results['messages']))
             message_list.append(results['messages'])
             i = i+1
 
@@ -299,9 +413,125 @@ def listmessages():
 
     return jsonify(message_list)
 
+@main.route('/listheaders')
+def listheaders():
+    if 'credentials' not in session:
+        session['scope'] = 'readonly'
+        return redirect('authorize')
+
+    credentials = Credentials(**session['credentials'])
+
+    try:
+        message_list = list()
+        service = build('gmail', 'v1', credentials=credentials)
+
+        results=service.users().messages().list(userId='me').execute()
+        message_list.append(results['messages'])
+        app.logger.info(results['nextPageToken'])
+
+        while results['nextPageToken']:
+            results=service.users().messages().list(userId='me', pageToken=results['nextPageToken']).execute()
+            app.logger.info(results['nextPageToken'])
+            message_list.append(results['messages'])
+
+        session['credentials'] = credentials_to_dict(credentials)
+
+    except HttpError as error:
+        app.logger.error('An error occured: ',error)
+        return 'An error occured: '
+
+    except KeyError as error:
+        app.logger.error('An error occured: ',error)
+        return 'An error occured: '
+
+    return jsonify(message_list)
+
+def download_mail_block(*args, **kwargs):
+    count = 0
+    t0 = timer()
+
+    mail_block = args[0]
+    credentials = args[1]
+    mail_id_list = list()
+
+    try:
+        service = build('gmail', 'v1', credentials)
+    except HttpError as error:
+        app.logger.error('build error {!r}'.format(error))
+        return
+
+    batch = service.new_batch_http_request()
+    for mail in mail_block:
+        batch.add(service.users().messages().get(userId='me', id=mail['id'], format='minimal'), 
+                  callback=download_mail_batch_cb)
+        mail_id_list.append(mail['id'])
+
+    batch.execute(http=build_http())
+
+    elapsed = timer() - t0
+    app.logger.info('mail block count {} elapsed time {:.2f}s'.format(count, elapsed))
+    return
+
+def download_mail(mail_block_list, credentials):
+    with futures.ThreadPoolExecutor() as executor:
+        mail_list_futures = []
+        for count, mail in enumerate(mail_block_list):
+            f = executor.submit(download_mail_block, mail, credentials)
+            mail_list_futures.append(f)
+            msg = 'Scheduled for list number {}'
+            app.logger.info(msg.format(count))
+
+        results = []
+        for future in futures.as_completed(mail_list_futures):
+            res = future.result()
+            msg = '{} result: {!r}'
+            app.logger.info(msg.format(future, res))
+            results.append(res)
+
+    return len(results)
+
+def download_mail_batch_cb(request_id, response, exception):
+    if exception is not None:
+        app.logger.info('request_id: {}'.exception)
+        return
+    else:
+        app.logger.info('request_id: {}'.format(request_id))
+
+    return
+
+def mail_q_handler():
+    while True:
+        app.logger.info('working started')
+        item = mail_req_q.get()
+        get_mail_blocks(item)
+
+@main.route('/get_inbox')
+def get_inbox():
+    if 'credentials' not in session:
+        session['scope'] = 'readonly'
+        return redirect('authorize')
+
+    credentials = Credentials(**session['credentials'])
+
+    try:
+        service = build('gmail', 'v1', credentials=credentials)
+        results = service.users().getProfile(userId='me').execute()
+
+        app.logger.info('Threading started')
+        threading.Thread(target=mail_q_handler, daemon=True).start()
+
+        app.logger.info('inserting to queue')
+        mail_req_q.put(credentials, block=False)
+    except HttpError as error:
+        app.logger.error('An error occured:', error)
+        return 'An error occured in getting profile'
+
+    return jsonify(results)
+
 @main.route('/authorize')
 def authorize():
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(CLIENT_SECRETS_FILE, scopes=SCOPES) 
+    scope = session['scope']
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(CLIENT_SECRETS_FILE, scopes=SCOPES[scope]) 
    
     flow.redirect_uri = url_for('main.oauth2callback', _external=True)
 
@@ -316,9 +546,10 @@ def authorize():
 @main.route('/oauth2callback')
 def oauth2callback():
     state = session['state']
+    scope = session['scope']
 
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(CLIENT_SECRETS_FILE, 
-                                                                   scopes=SCOPES, state=state)
+                                                                   scopes=SCOPES[scope], state=state)
     flow.redirect_uri = url_for('main.oauth2callback', _external=True)
 
     authorization_response = request.url
@@ -351,6 +582,7 @@ def revoke():
 def clear_credentials():
     if 'credentials' in session:
         del session['credentials']
+        del session['scope']
     return ('Credentials have been cleared.<br><br>' + url_for('main.print_index_table', _external=True))
 
 def credentials_to_dict(credentials):
@@ -360,42 +592,3 @@ def credentials_to_dict(credentials):
           'client_id': credentials.client_id,
           'client_secret': credentials.client_secret,
           'scopes': credentials.scopes}
-
-@main.route("/gmail", methods=["GET"])
-def gmail():
-    """Shows basic usage of the Gmail API.
-    Lists the user's Gmail labels.
-    """
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('/var/www/gmail/token.json'):
-        creds = Credentials.from_authorized_user_file('/var/www/gmail/token.json', SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                '/var/www/gmail/credentials.json', SCOPES)
-            flow.redirect_uri = url_for('main.oauth2callback', _external=True)
-
-            authorization_url, state = flow.authorization_url(access_type='offline',
-                                                              include_granted_scopes='true')
-        # Save the credentials for the next run
-        with open('/var/www/gmail/token.json', 'w') as token:
-            token.write(creds.to_json())
-
-    service = build('gmail', 'v1', credentials=creds)
-
-    # Call the Gmail API
-    results = service.users().labels().list(userId='me').execute()
-    labels = results.get('labels', [])
-
-    if not labels:
-        api.logger.info('No labels found.')
-    else:
-        api.logger.info('Labels:')
-        for label in labels:
-            api.logger.info(label['name'])
