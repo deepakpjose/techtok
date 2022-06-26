@@ -2,7 +2,13 @@ services:
 
   backend:
     build: ./
-    restart: always
+    restart: unless-stopped 
+    environment: 
+      APP_ENV: "prod"
+      MONGODB_DATABASE: udb
+      MONGODB_USERNAME: "${USERNAME}"
+      MONGODB_PASSWORD: "${PASSWORD}"
+      MONGODB_HOSTNAME: mongodb
     labels:
       # Enable Traefik for this specific "backend" service
       - traefik.enable=true
@@ -29,7 +35,36 @@ services:
       # Use the public network created to be shared between Traefik and
       # any other service that needs to be publicly available with HTTPS
       - traefik-public
+      - backend
+    volumes:
+      - appdata:/var/www
+    depends_on:
+      - mongodb  
+
+  mongodb:
+    image: mongo:5.0.5
+    container_name: mongodb
+    restart: unless-stopped
+    command: mongod --auth
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${DB_ADMIN}"
+      MONGO_INITDB_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MONGO_INITDB_DATABASE: udb
+      MONGODB_DATA_DIR: /data/db
+      MONDODB_LOG_DIR: /dev/null
+    volumes:
+      - mongodbdata:/data/db
+    networks:
+      - backend
 
 networks:
   traefik-public:
     external: true
+  backend:
+    driver: bridge
+
+volumes:
+  mongodbdata:
+    driver: local
+  appdata:
+    driver: local
