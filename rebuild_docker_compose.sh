@@ -1,5 +1,6 @@
-sudo docker ps | grep techtok_backend | awk '{ print $1;}' | xargs sudo docker kill
-sudo docker-compose build
-sudo docker-compose -f docker-compose.yml up -d
-docker_id=`sudo docker ps | grep techtok_backend | awk '{ print $1; }'`
-sudo docker exec -it $docker_id bash 
+docker ps | grep techtok_backend | awk '{ print $1;}' | xargs docker kill
+docker images | grep none | awk '{ print $3; }' | xargs docker rmi -f
+docker-compose build
+docker-compose -f docker-compose.yml up -d
+docker_id=`docker ps | grep techtok_backend | awk '{ print $1; }'`
+docker exec -it $docker_id bash 

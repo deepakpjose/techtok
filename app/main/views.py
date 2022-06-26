@@ -363,7 +363,7 @@ def get_mail_blocks(credentials):
                                                       pageToken=results['nextPageToken']).execute()
             message_list.append(results['messages'])
             count += 1
-            if count == 2:
+            if count == 50:
                 break
 
     except HttpError as error:
@@ -378,7 +378,7 @@ def get_mail_blocks(credentials):
     t0 = timer()
     results = download_mail(message_list, credentials)
     elapsed = timer() - t0
-    app.logger.info('full mails count {} elapsed time {:.2f}s'.format(len(results), elapsed))
+    app.logger.info('full mails count {} elapsed time {:.2f}s'.format(results, elapsed))
     return
 
 @main.route('/listmessages')
@@ -455,25 +455,28 @@ def download_mail_block(*args, **kwargs):
     mail_id_list = list()
 
     try:
-        service = build('gmail', 'v1', credentials)
+        service = build('gmail', 'v1', credentials=credentials)
     except HttpError as error:
         app.logger.error('build error {!r}'.format(error))
         return
 
     batch = service.new_batch_http_request()
+    headers = ['List-Unsubscribe','Subject','Date', 'Return-Path']
     for mail in mail_block:
-        batch.add(service.users().messages().get(userId='me', id=mail['id'], format='minimal'), 
+        batch.add(service.users().messages().get(userId='me', id=mail['id'], format='metadata',
+                                                 metadataHeaders=headers), 
                   callback=download_mail_batch_cb)
         mail_id_list.append(mail['id'])
 
-    batch.execute(http=build_http())
+    app.logger.info('service dict:', service.__dict__)
+    batch.execute(http=service._http)
 
     elapsed = timer() - t0
     app.logger.info('mail block count {} elapsed time {:.2f}s'.format(count, elapsed))
     return
 
 def download_mail(mail_block_list, credentials):
-    with futures.ThreadPoolExecutor() as executor:
+    with futures.ThreadPoolExecutor(max_workers=1) as executor:
         mail_list_futures = []
         for count, mail in enumerate(mail_block_list):
             f = executor.submit(download_mail_block, mail, credentials)
@@ -492,11 +495,22 @@ def download_mail(mail_block_list, credentials):
 
 def download_mail_batch_cb(request_id, response, exception):
     if exception is not None:
-        app.logger.info('request_id: {}'.exception)
+        app.logger.info('request_id: {}',exception)
         return
     else:
         app.logger.info('request_id: {}'.format(request_id))
+        if isinstance(response, dict):
+            for message in response.items():
+                if len(message) == 0 or isinstance(message, tuple) is False:
+                    continue
 
+                if message[0] != 'payload':
+                    continue
+
+                metadata = message[1].get('headers', 'None')
+                for data in metadata:
+                    if data['name'] == 'List-Unsubscribe':
+                        app.logger.info(data['value']) 
     return
 
 def mail_q_handler():
@@ -554,8 +568,8 @@ def oauth2callback():
 
     authorization_response = request.url
     flow.fetch_token(authorization_response=authorization_response)
-
     credentials = flow.credentials
+
     session['credentials'] = credentials_to_dict(credentials)
 
     return redirect(url_for('main.test_api_request'))

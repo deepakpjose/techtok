@@ -12,7 +12,6 @@ ENV APP_PATH=/var/www/app
 COPY ./requirements.txt /var/www/requirements.txt
 RUN pip install -r /var/www/requirements.txt
 
-COPY ./app.ini /etc/uwsgi/uwsgi.ini
 COPY ./app /var/www/app
 COPY ./tests /var/www/tests
 COPY ./gmail /var/www/gmail
