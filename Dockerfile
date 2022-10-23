@@ -18,3 +18,4 @@ COPY ./gmail /var/www/gmail
 COPY ./app.ini /var/www/app.ini
 COPY ./manage.py /var/www/manage.py
 COPY ./wsgi.py /var/www/wsgi.py
+COPY ./app/docs /var/www/app/docs

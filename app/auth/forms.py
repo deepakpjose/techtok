@@ -8,7 +8,7 @@ from wtforms import (
     FileField,
     TextAreaField,
 )
-from wtforms.validators import Required, Length, Email, Regexp, EqualTo
+from wtforms.validators import DataRequired, Length, Email, Regexp, EqualTo
 from wtforms import ValidationError, validators
 
 
@@ -26,12 +26,12 @@ class PosterCreateForm(FlaskForm):
 class LoginForm(FlaskForm):
     email = StringField(
         "Email",
-        validators=[Required(), Length(1, 64), Email()],
+        validators=[DataRequired(), Length(1, 64), Email()],
         render_kw={"class": "form-control", "placeholder": "abc@example.com"},
     )
     password = PasswordField(
         "Password",
-        validators=[Required()],
+        validators=[DataRequired()],
         render_kw={"class": "form-control", "placeholder": "Password"},
     )
     remember_me = BooleanField("Keep me logged in")
