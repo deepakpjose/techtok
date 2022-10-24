@@ -16,7 +16,7 @@ class PosterCreateForm(FlaskForm):
     header = StringField("Header", [validators.Length(min=1, max=255)])
     desc = TextAreaField("Description", [validators.Length(min=1, max=500)])
     body = TextAreaField(
-        "Body", [validators.Length(min=1)], render_kw={"rows": 400, "cols": 81}
+        "Body", [validators.Length(min=1)], render_kw={"rows": 10, "cols": 81}
     )
     tags = StringField("Tags", [validators.Length(min=1, max=255)])
     poster = FileField("Image File", validators=[FileRequired()])

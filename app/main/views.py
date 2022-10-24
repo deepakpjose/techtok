@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from httplib2 import Http
 from timeit import default_timer as timer
 from concurrent import futures
-from flask import render_template, url_for, send_from_directory, request, make_response, session, redirect, jsonify
+from flask import render_template, url_for, send_from_directory, request, make_response, session, redirect, jsonify, Markup
 from app import app
 from app.models import Post, PostType
 from . import main
@@ -46,8 +46,9 @@ def post(id, header):
     if page is None:
         return render_template("error.html", "Post {:s} not present".format(id))
 
-    return render_template("post.html", post=page)
-
+    #Making body markup safe using Markup class from flask.
+    markup = Markup(page.body)
+    return render_template("post.html", post=page, markup=markup)
 
 @main.route("/download_file/<int:id>/<filename>", methods=["GET"])
 def download_file(id, filename):

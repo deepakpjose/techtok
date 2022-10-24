@@ -5,6 +5,7 @@ Flask-SQLAlchemy
 Flask-Login
 Flask-PyMongo
 wtforms[email]
+itsdangerous==2.0.1
 black
 pytest
 coverage

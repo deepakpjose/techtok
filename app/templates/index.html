@@ -15,11 +15,11 @@
           <div class="row">
             {% for post in posts %}  
                 <div class="col-md-4">
-                  <div class="card text-white bg-info mb-4">
+                  <div class="card text-dark bg-primary mb-4">
                     <a href="{{ url_for('main.post', id=post.id, header=post.header) }}">
-		    <div class="card-body">
-		         <h5 class="card-title text-white text-center">{{ post.header }}</h5>
-		    </div>
+                      <div class="card-body">
+                          <h5 class="card-title text-white text-center">{{ post.header }}</h5>
+                      </div>
                   </div>
                 </div>
             {% endfor %}
