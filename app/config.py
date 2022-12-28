@@ -28,4 +28,4 @@ class Config:
         "doc",
     }
 
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "data.sqlite")
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, 'docs', "data.sqlite")
