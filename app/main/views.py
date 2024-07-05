@@ -4,6 +4,7 @@ import os.path
 import random
 import requests
 import threading
+import logging
 from queue import Queue
 from urllib.parse import urlparse
 from httplib2 import Http
@@ -52,7 +53,8 @@ def post(id, header):
 
 @main.route("/download_file/<int:id>/<filename>", methods=["GET"])
 def download_file(id, filename):
-    directory = "{:s}/{:s}".format(app.config["UPLOAD_FOLDER"], str(id))
+    directory = "{:s}".format(app.config["UPLOAD_FOLDER"])
+    logging.info('path: {:s} filename: {:s}'.format(directory, filename))
     return send_from_directory(directory, filename)
 
 

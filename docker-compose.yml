@@ -7,15 +7,15 @@ services:
       # Enable Traefik for this specific "backend" service
       - traefik.enable=true
       # Define the port inside of the Docker service to use
-      - traefik.http.services.app.loadbalancer.server.port=80
+      - traefik.http.services.backend.loadbalancer.server.port=80
       # Make Traefik use this domain in HTTP
       - traefik.http.routers.insidecode-http.entrypoints=http
-      - traefik.http.routers.insidecode-http.rule=Host(`insidecode.me`)
+      - traefik.http.routers.insidecode-http.rule=Host(`insidecode.me`)||Host(`www.insidecode.me`)
       # Use the traefik-public network (declared below)
       - traefik.docker.network=traefik-public
       # Make Traefik use this domain in HTTPS
       - traefik.http.routers.insidecode-https.entrypoints=https
-      - traefik.http.routers.insidecode-https.rule=Host(`insidecode.me`)
+      - traefik.http.routers.insidecode-https.rule=Host(`insidecode.me`)||Host(`www.insidecode.me`)
       - traefik.http.routers.insidecode-https.tls=true
       # Use the "le" (Let's Encrypt) resolver
       - traefik.http.routers.insidecode-https.tls.certresolver=le
@@ -24,7 +24,8 @@ services:
       - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
       # Middleware to redirect HTTP to HTTPS
       - traefik.http.routers.insidecode-http.middlewares=https-redirect
-      - traefik.http.routers.insidecode-https.middlewares=admin-auth
+      # Incase of enabling authentication, uncomment this settings.
+      # - traefik.http.routers.insidecode-https.middlewares=admin-auth
     networks:
       # Use the public network created to be shared between Traefik and
       # any other service that needs to be publicly available with HTTPS
@@ -33,21 +34,21 @@ services:
       - insidecode:/var/www/app/docs
 
   tactification:
-    build: ./
+    build: ~/tactification 
     restart: always
     labels:
       # Enable Traefik for this specific "backend" service
       - traefik.enable=true
       # Define the port inside of the Docker service to use
-      - traefik.http.services.app.loadbalancer.server.port=80
+      - traefik.http.services.tactification.loadbalancer.server.port=80
       # Make Traefik use this domain in HTTP
       - traefik.http.routers.tactification-http.entrypoints=http
-      - traefik.http.routers.tactification-http.rule=Host(`tactification.com`)
+      - traefik.http.routers.tactification-http.rule=Host(`tactification.com`)||Host(`www.tactification.com`)
       # Use the traefik-public network (declared below)
       - traefik.docker.network=traefik-public
       # Make Traefik use this domain in HTTPS
       - traefik.http.routers.tactification-https.entrypoints=https
-      - traefik.http.routers.tactification-https.rule=Host(`tactification.com`)
+      - traefik.http.routers.tactification-https.rule=Host(`tactification.com`)||Host(`www.tactification.com`)
       - traefik.http.routers.tactification-https.tls=true
       # Use the "le" (Let's Encrypt) resolver
       - traefik.http.routers.tactification-https.tls.certresolver=le
@@ -56,7 +57,8 @@ services:
       - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
       # Middleware to redirect HTTP to HTTPS
       - traefik.http.routers.tactification-http.middlewares=https-redirect
-      - traefik.http.routers.tactification-https.middlewares=admin-auth
+      # Incase of enabling authentication, uncomment this settings.
+      # - traefik.http.routers.tactification-https.middlewares=admin-auth
     networks:
       # Use the public network created to be shared between Traefik and
       # any other service that needs to be publicly available with HTTPS
