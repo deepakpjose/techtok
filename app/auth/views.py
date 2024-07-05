@@ -2,6 +2,7 @@
 All custom login and logout apis are defined here.
 """
 import os
+import logging
 from flask import (
     redirect,
     url_for,
@@ -49,14 +50,30 @@ def logout():
     logout_user()
     return redirect(url_for("main.index"))
 
+def poster_delete(post):
+    if post.doc == None:
+        logging.info('file path for id {:d} is None'.format(post.id))
+        return
 
-def poster_directory_update(post, f):
-    directory = "{:s}/{:s}".format(app.config["UPLOAD_FOLDER"], str(post.id))
-    uploaded_file_path = os.path.join(directory, f.filename)
-    f.save(uploaded_file_path)
+    logging.info('file path is {:s}'.format(post.doc))
 
-    uploaded_file_url = url_for("main.download_file", id=post.id, filename=f.filename)
-    post.doc = uploaded_file_path
+    try:
+        os.remove(post.doc)
+    except:
+        return AttributeError
+
+    logging.info('file deletion {:s} is success'.format(post.doc))
+    return
+
+def poster_update(post, path, f):
+    filename = 'insidecode_' + str(post.id) + f.filename
+    absolute_path = os.path.join(path, filename)
+    logging.info('path: {:s} filename: {:s}'.format(path, absolute_path))
+
+    f.save(absolute_path)
+
+    uploaded_file_url = url_for("main.download_file", id=post.id, filename=filename)
+    post.doc = absolute_path 
     post.url = uploaded_file_url
     return
 
@@ -90,16 +107,9 @@ def writeposters():
             db.session.add(post)
             db.session.commit()
 
-            directory = "{:s}/{:s}".format(app.config["UPLOAD_FOLDER"], str(post.id))
-            print("directory:{:s} id={:s}", directory, post.id)
-            try:
-                os.mkdir(directory)
-            except:
-                return render_template(
-                    "error.html", msg="Poster directory creation failed"
-                )
-
-            poster_directory_update(post, f)
+            path = "{:s}".format(app.config["UPLOAD_FOLDER"])
+            print("directory:{:s} id={:s}", path, post.id)
+            poster_update(post, path, f)
 
             db.session.add(post)
             db.session.commit()
@@ -139,7 +149,7 @@ def editposters(id):
                 msg = "Poster editing failed: {:s}".format(sys.exc_info()[0])
                 return render_template("error.html", msg=msg)
 
-            poster_directory_update(post, f)
+            poster_update(post, f)
 
             db.session.add(post)
             db.session.commit()
@@ -153,3 +163,21 @@ def editposters(id):
         return redirect(url_for("auth.writeposters"))
 
     return render_template("writeposter.html", posterform=posterform)
+
+@auth.route("/deleteposters/<int:id>", methods=["GET", "POST"])
+@login_required
+@permission_required(Permission.WRITE_ARTICLES)
+def deleteposters(id):
+    logging.info('Deleting post: {:d}'.format(id))
+    try:
+        post = Post.query.get_or_404(id)
+    except:
+        msg = "Poster deletion failed"
+        return render_template("error.html", msg=msg)
+
+    poster_delete(post)
+    db.session.delete(post)
+    db.session.commit()
+
+    logging.info('file deletion {:s} from db is success'.format(post.doc))
+    return redirect(request.args.get("next") or url_for("main.index"))
