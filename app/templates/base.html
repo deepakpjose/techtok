@@ -5,39 +5,48 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Inside Code</title>
+    <title>InsideCode</title>
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}">
     {{ bootstrap.load_css() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
 </head>
 <body>
     <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-light mb-4 bg-primary text-light">
+        <nav class="navbar navbar-expand-lg navbar-light mb-4 bg-primary text-dark">
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                     aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav navbar-center navbar-brand mr-auto text-light">
-                    {{ render_nav_item('main.index', 'Inside Code', use_li=True) }}
+                <ul class="navbar-nav">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="http://www.insidecode.me">InsideCode</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="https://www.buymeacoffee.com/deepakpjos4">BuyMeACoffee</a>
+                    </li>
                 </ul>
             </div>
         </nav>
     </div> 
-    <main class="container">
+    <div class="container">
         {{ render_messages(container=False, dismissible=True) }}
         {% block content %}{% endblock %}
-    </main>
-
-    <footer class="fixed-bottom text-center footer">
-        {% block footer %}
-            <p> &copy; 2021–<script>document.write(new Date().getFullYear())</script> <a href="http://insidecode.me" title="Written by
+    </div>
+    <br>
+    {% block footer %}
+    	<!-- footer --!>
+        <footer class="page-footer">
+    	    <!-- copyright --!>
+            <div class="footer-copyright text-center"> &copy; 2021–<script>document.write(new Date().getFullYear())</script> <a href="http://insidecode.me" title="Written by
                 Deepak P Jose">www.insidecode.me</a>
-                <a href="https://github.com/deepakpjose">GitHub</a>
-                <a href="https://twitter.com/deepakpjose">Twitter</a>
-            </p>
-        {% endblock %}
-    </footer>
+-                <a href="https://github.com/deepakpjose">GitHub</a>
+-                <a href="https://twitter.com/deepakpjose">Twitter</a>
+            </div>
+    	    <!-- copyright --!>
+        </footer>
+    	<!-- footer --!>
+    {% endblock %}
 
     {{ bootstrap.load_js() }}
 </body>
