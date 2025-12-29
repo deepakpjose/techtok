@@ -17,9 +17,9 @@ from flask import (
 from flask_login import current_user, login_required, login_user, logout_user
 from app import db, app
 from app.auth import auth
-from app.models import User, Permission, Role, Post, PostType
+from app.models import User, Permission, Role, Post, PostType, Book
 from werkzeug.utils import secure_filename
-from app.auth.forms import LoginForm, PosterCreateForm, PosterEditForm
+from app.auth.forms import LoginForm, PosterCreateForm, PosterEditForm, BookForm, BookDeleteForm
 from app.auth.decorators import permission_required
 from app.auth.utils import allowed_file
 
@@ -198,6 +198,62 @@ def deleteposters(id):
     poster_delete(post)
     db.session.delete(post)
     db.session.commit()
+
+
+@auth.route("/books/new", methods=["GET", "POST"])
+@login_required
+@permission_required(Permission.ADMINISTER)
+def new_book():
+    bookform = BookForm()
+    if bookform.validate_on_submit():
+        book = Book(
+            year_read=bookform.year_read.data,
+            title=bookform.title.data,
+            author=bookform.author.data,
+            genre=bookform.genre.data,
+            comments=bookform.comments.data,
+        )
+        db.session.add(book)
+        db.session.commit()
+        flash("Book added.")
+        return redirect(url_for("main.books"))
+
+    return render_template("book_form.html", bookform=bookform)
+
+
+@auth.route("/books/<int:id>/edit", methods=["GET", "POST"])
+@login_required
+@permission_required(Permission.ADMINISTER)
+def edit_book(id):
+    book = Book.query.get_or_404(id)
+    bookform = BookForm(obj=book)
+    if bookform.validate_on_submit():
+        book.year_read = bookform.year_read.data
+        book.title = bookform.title.data
+        book.author = bookform.author.data
+        book.genre = bookform.genre.data
+        book.comments = bookform.comments.data
+        db.session.add(book)
+        db.session.commit()
+        flash("Book updated.")
+        return redirect(url_for("main.books"))
+
+    return render_template("book_form.html", bookform=bookform)
+
+
+@auth.route("/books/<int:id>/delete", methods=["GET", "POST"])
+@login_required
+@permission_required(Permission.ADMINISTER)
+def delete_book(id):
+    book = Book.query.get_or_404(id)
+    deleteform = BookDeleteForm()
+    if deleteform.validate_on_submit():
+        db.session.delete(book)
+        db.session.commit()
+        flash("Book deleted.")
+        return redirect(url_for("main.books"))
+
+    return render_template("book_delete.html", book=book, deleteform=deleteform)
 
     logging.info('file deletion {:s} from db is success'.format(post.doc))
     return redirect(request.args.get("next") or url_for("main.index"))

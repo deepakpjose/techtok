@@ -262,6 +262,24 @@ class Post(db.Model):
         return "{:d} {:s}, {:d}".format(date_str.day, month, date_str.year)
 
 
+class Book(db.Model):
+    """
+    books read by users
+    """
+
+    __tablename__ = "books"
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    year_read = db.Column(db.Integer, index=True)
+    title = db.Column(db.String(128))
+    author = db.Column(db.String(128))
+    genre = db.Column(db.String(64))
+    comments = db.Column(db.Text)
+
+    def __repr__(self):
+        return "<Book %r>" % self.title
+
+
 @login_manager.user_loader
 def load_user(user_id):
     """ """

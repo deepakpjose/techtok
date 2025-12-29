@@ -8,6 +8,7 @@ from wtforms import (
     SubmitField,
     FileField,
     TextAreaField,
+    IntegerField,
 )
 from wtforms.validators import DataRequired, Length, Email, Regexp, EqualTo
 from wtforms import ValidationError, validators
@@ -61,3 +62,16 @@ class LoginForm(FlaskForm):
         "Sign In",
         render_kw={"style": "background-color:#007bff", "class": "form-control"},
     )
+
+
+class BookForm(FlaskForm):
+    year_read = IntegerField("Year", validators=[DataRequired()])
+    title = StringField("Title", validators=[DataRequired(), Length(max=128)])
+    author = StringField("Author", validators=[DataRequired(), Length(max=128)])
+    genre = StringField("Genre", validators=[Length(max=64)])
+    comments = TextAreaField("Comments")
+    submit = SubmitField("Save")
+
+
+class BookDeleteForm(FlaskForm):
+    submit = SubmitField("Delete")

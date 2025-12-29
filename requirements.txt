@@ -4,9 +4,8 @@ Bootstrap-Flask==1.5.2
 Flask-WTF
 Flask-SQLAlchemy
 Flask-Login
-Flask-PyMongo
 wtforms[email]
 itsdangerous==2.0.1
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
+Werkzeug==2.2.2
+requests
+Flask-migrate

@@ -1,0 +1,9 @@
+{% from 'bootstrap/form.html' import render_form %}
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Delete Book</h2>
+    <p>Are you sure you want to delete <strong>{{ book.title }}</strong>?</p>
+    {{ render_form(deleteform, action=url_for('auth.delete_book', id=book.id)) }}
+    <a class="btn btn-secondary" href="{{ url_for('main.books') }}">Cancel</a>
+{% endblock %}

@@ -7,12 +7,11 @@ import threading
 import logging
 from queue import Queue
 from urllib.parse import urlparse
-from httplib2 import Http
 from timeit import default_timer as timer
 from concurrent import futures
 from flask import render_template, url_for, send_from_directory, request, make_response, session, redirect, jsonify, Markup
 from app import app
-from app.models import Post, PostType
+from app.models import Post, PostType, Book
 from . import main
 
 mail_req_q = Queue()
@@ -99,3 +98,8 @@ def sitemap():
 def aboutme():
     return render_template("about.html")
 
+
+@main.route("/books", methods=["GET"])
+def books():
+    books = Book.query.order_by(Book.year_read.desc(), Book.title.asc()).all()
+    return render_template("books.html", books=books)

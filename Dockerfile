@@ -23,3 +23,5 @@ COPY ./wsgi.py /var/www/wsgi.py
 COPY ./conf.d.nginx.conf /etc/nginx/conf.d/nginx.conf
 COPY ./upload.conf /etc/nginx/conf.d/upload.conf
 COPY ./nginx.conf /app/nginx.conf
+COPY ./db_migrate.py /var/www/db_migrate.py
+COPY ./docker_migrate.sh /var/www/docker_migrate.sh
